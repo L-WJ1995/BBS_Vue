@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BBC首页</title>
+  <!-- <link rel='stylesheet' href='stylesheets/content.css'> -->
+  <link rel='stylesheet' href='stylesheets/style.css'>
+  <link rel='stylesheet' href='stylesheets/css/bootstrap.css'>
+  <style>
+    [v-cloak] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id='myBBS'> 
+    <router-view></router-view>  
+  </div>
+</body>
+<script src="javascripts/vue-2.5.17.js"></script>
+<script src="javascripts/vue-router-3.0.1.js"></script>
+<script src="javascripts/axios.min.js"></script>
+<script src="javascripts/jquery.min.js"></script>
+<script src="javascripts/bootstrap.js"></script>
+<script>
+  const router = new VueRouter({
+    mode: 'history',
+    routes: [
+      {
+        path: '/',
+        name: 'home',
+        component: {
+          template: `
+            <div>
+              <nav id='nav' class="navbar navbar-default navbar-fixed-top navbar-inverse" > 
+                <div class="container">
+                  <ul>
+                    <li>
+                      <strong v-if='user.name' v-text="'欢迎' + user.name" ></strong>
+                    </li>
+                    <li>
+                      <form action="/logOut" method="get">
+                        <button class="btn btn-warning" v-text="user.name ? '退出登录' : '登录'"></button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div id="contenBox">
+                <table class="table table-hover">
+                  <tr v-for='data in contents' :key='data.id' v-cloak>
+                      <td :title='data.title'>
+                        <a target="_blank" :href='"/content/" + data.id' v-text='data.title'></a>
+                      </td>
+                      <td>
+                        <!-- 本意转到用户页面  未做 -->
+                        <a target="_blank" :href='"/content/" + data.id' v-text='data.username'></a>
+                      </td>
+                      <td>
+                        <a target="_blank" :href='"/content/" + data.id' v-text='"浏览次数: " + data.browseNumber '></a>
+                      </td>
+                      <td style="width:150px">
+                        <a target="_blank" :href='"/content/" + data.id' v-text='data.time'></a>
+                      </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="submit_content">
+                <div id="arrows" onselectstart="return false"><span>发帖</span></div>
+                <form class="form-horizontal" action="/add_post" method="post">
+                  <div class="form-group">
+                    <div class=" input-group"><span class="input-group-addon">标题</span>
+                      <input class="form-control" type="text" id="submit_title" name="title" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="nopadding">
+                      <textarea class="form-control" rows="10" style="resize:none" name="content" id="submit_text" autocomplete="off"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-sm-offset-2  nopadding">
+                      <button class="btn btn-success btn-block" id="submit_content" type="submit">提交</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <button class="btn btn-primary" style="display:none" type="button" data-toggle="modal" data-target=".bs-example-modal-sm"></button>
+              <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" id="modal_tip">
+              <div class="modal-dialog modal-sm" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3 class="modal-title" id="gridSystemModalLabel"><span></span></h3>
+                  </div>
+                  <div class="modal-body" style="font-size:18px; text-indent:20px;"><span></span></div>
+                  <div class="modal-footer">
+                    <button class="btn btn-block" type="button" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          `,
+          data() {
+            return {
+              user:{},
+              contents:[],
+            }
+          },
+          async created() {
+            let resData = await axios.get('/user')
+            this.user = resData.data.user ? resData.data.user : {}
+            this.contents = resData.data.datas
+            this.$root.user = resData.data.user
+          }
+        },
+      },
+    ]
+  })
+
+  let myBBS = new Vue({
+    el: '#myBBS',
+    data: {
+      user: null
+    },
+    methods: {
+      logout() {
+
+      }
+    },
+
+    router,
+  })
+
+</script>
+</html>
