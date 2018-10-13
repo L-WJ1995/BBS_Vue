@@ -1,4 +1,4 @@
-arrows.onclick = () => {
+function arrowsClick() {
   shade.style.display = "block"
   setTimeout(() => shade.style["background-color"] = "rgba(0,0,0,0.5)" ,0)
   arrows.style.display = "none"
@@ -16,7 +16,7 @@ shade.onclick = () => {
   },1000)
 }
 
-submit_content.onclick = (e) => {
+function submit_contentClick(e) {
   let event = e || window.event
   if (event.preventDefault) event.preventDefault()
   else event.returnValue = false

@@ -1,0 +1,37 @@
+
+.login-enter-active {
+  opacity: 1;
+  transition: all .6s ease;
+}
+.login-leave-active {
+  opacity: 1;
+  transition: all .6s ease;
+}
+.login-enter {
+  transform: translateX(-180px);
+  opacity: 0;
+}
+.login-leave-to{
+  transform: translateX(180px);
+  opacity: 0;
+}
+
+
+
+
+.shade-enter-active {
+  background-color:rgba(0,0,0,0.5);
+  transition: all .6s linear;
+}
+.shade-leave-active {
+  background-color:rgba(0,0,0,0.5);
+  transition: all .6s linear;
+}
+
+.shade-enter{
+  background-color:transparent;
+}
+
+.shade-leave-to{
+  background-color:transparent;
+}

@@ -67,7 +67,7 @@ router.post('/registerORlogin', async (req, res, next) => {     //登录或注�
       res.cookie('userID', user.id, cookieConfig)
       req.session.login = true
       req.session.userID = user.id
-      res.json({status:100, type:req.body.type, msg:"注册成功"})
+      res.json({status:100, type:req.body.type, user: user, msg:"注册成功"})
     }
   }
 
@@ -80,7 +80,7 @@ router.post('/registerORlogin', async (req, res, next) => {     //登录或注�
       res.cookie('userID', user.id, cookieConfig)
       req.session.login = true
       req.session.userID = user.id
-      res.json({status:100, type:req.body.type, msg:"登陆成功"})
+      res.json({status:100, type:req.body.type, user: user, msg:"登陆成功"})
     }
   }
 
@@ -89,17 +89,16 @@ router.post('/registerORlogin', async (req, res, next) => {     //登录或注�
 router.get('/logOut', (req, res, next) => {  //退出登录
   req.session.login = false
   res.clearCookie('userID')
-  res.redirect('/')
+  res.json({status:100})
 })
 
 
 router.post('/add_post', async (req, res, next) => {     //发表文章
-  console.log(req.body.content)
   if (req.user && req.user.id - 0 >= 0) {
     db.run('INSERT INTO contents (title, content, time, userid, username, greatNumber, browseNumber) VALUES (?,?,?,?,?,?,?)', 
            req.body.title, req.body.content, new Date().toLocaleString(), req.user.id - 0, req.user.name, 0, 0)
-    let contentID = await db.get('SELECT id FROM contents WHERE  username=? ORDER BY id DESC LIMIT 1', req.user.name)
-    res.json({status:100, msg:"发帖成功", userID: req.user.id, contentID:contentID.id})
+    let content = await db.get('SELECT * FROM contents WHERE  username=? ORDER BY id DESC LIMIT 1', req.user.name)
+    res.json({status:300, msg:"发帖成功", id:content.id})
   } else user_error(req, res)
 
 })
@@ -127,7 +126,7 @@ router.get('/content/:contentID', async (req, res, next) => {   //获取文章�
       if (commentsGreat && commentsGreat.indexOf(`[${item.id}]`) >= 0) item.great = true
     })
     if (contentData.username === req.user.name) contentData.isContentUser = true
-    res.render('content',{contentGreat, user:req.user, contentData, commentData})
+    res.json({contentGreat, contentData, commentData})
   } else user_error(req, res)
 })
 
@@ -259,6 +258,10 @@ router.put('/greatNumber/:contentid/:target/:status/:commentid',  async (req, re
   } else user_error(req, res)
 })
 
+
+router.get('*', async function(req, res, next) {      
+  res.sendFile(path.join(__dirname, '../public/src', 'index.html'))
+})
 
 function user_error(req, res){
   req.session.login = false

@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <title>BBC首页</title>
   <!-- <link rel='stylesheet' href='stylesheets/content.css'> -->
-  <link rel='stylesheet' href='stylesheets/style.css'>
   <link rel='stylesheet' href='stylesheets/css/bootstrap.css'>
+  <link rel='stylesheet' href='stylesheets/style.css'>
+  <link rel='stylesheet' href='stylesheets/transition.css'>
+  <link rel="stylesheet" href="/stylesheets/content.css" />
   <style>
     [v-cloak] {
       display: none !important;
@@ -14,7 +16,86 @@
 </head>
 <body>
   <div id='myBBS'> 
-    <router-view></router-view>  
+    <transition name="shade">
+      <div id="shade" v-show='shade' @click="shadeClick" v-cloak></div> 
+    </transition>
+    <nav id='nav' ref='nav' class="navbar navbar-default navbar-fixed-top navbar-inverse" > 
+      <div class="container">
+        <ul>
+          <li>
+            <strong v-if='user.name' v-text="'欢迎' + user.name" ></strong>
+          </li>
+          <li>
+            <button @click='log' class="btn btn-warning" v-text="user.name ? '退出登录' : '登录'"></button>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <transition name="login">
+      <div id="login"  v-show="logInShow" @click.self="logInShow = false" v-cloak>
+        <div class="container">
+          <form   v-show="logInShow" class="form-horizontal  col-sm-3" id="form" action="/registerORlogin" method="post">
+            <div class="form-group">
+              <label class="col-sm-2 control-label" for="username">帐号 </label>
+              <div class="col-sm-10">
+                <input class="form-control" type="text" name="username" autofocus="autofocus" autocomplete="off" placeholder="请输入用户名" id="username" v-model='userData.username'>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-2 control-label" for="password">密码 </label>
+              <div class="col-sm-10">
+                <input class="form-control" type="password" name="password" placeholder="请输入密码" id="password" autocomplete="off" v-model='userData.password'>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-2 control-label" for="captcha">验证码 </label>
+              <div class="col-sm-10">
+                <input class="form-control" style="width:calc(100% - 90px);display:inline-block; vertical-align: middle;" type="text" name="captcha" placeholder="请输入验证码" id="captcha" autocomplete="off" v-model='userData.captcha'><span id="captcha_img" style="width:80px; display:inline-block;cursor:pointer; height:35px; margin-left:10px" @click="getCaptcha"></span>
+              </div>
+            </div>
+            <div class="form-group " id="bottom">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox" style="float:right">
+                  <label>
+                    <input id="keepLogin" v-model='userData.keepLogin' type="checkbox" tabindex="-1">保持登录
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button class="btn btn-primary active" type="submit" name="SignUp" @click.prevent.self="logInORregister(1)" style="width:45%; float:left;" tabindex="-1" :disabled="buttonStatus">Sign Up</button>
+                <button class="btn btn-success active" type="submit" name="SignIn" @click.prevent.self="logInORregister(2)" style="width:45%; float:right;" :disabled="buttonStatus">Sign In</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </transition>
+    <router-view ref='son' 
+    :contents='contents' 
+    :arrows-show='arrowsShow' 
+    :content-data='contentData'
+    :comment-data='commentData'  
+    :content-Great='contentGreat'
+    > 
+    </router-view>  
+  </div>
+
+
+  <button class="btn btn-primary" style="display:none" type="button" data-toggle="modal" data-target=".bs-example-modal-sm"></button>
+  <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="gridSystemModalLabel"><span></span></h3>
+        </div>
+        <div class="modal-body" style="font-size:18px; text-indent:20px;"><span></span></div>
+        <div class="modal-footer">
+          <button class="btn btn-block " type="button" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 </body>
 <script src="javascripts/vue-2.5.17.js"></script>
@@ -22,6 +103,7 @@
 <script src="javascripts/axios.min.js"></script>
 <script src="javascripts/jquery.min.js"></script>
 <script src="javascripts/bootstrap.js"></script>
+<script src="javascripts/myBBS.js"></script>
 <script>
   const router = new VueRouter({
     mode: 'history',
@@ -30,43 +112,30 @@
         path: '/',
         name: 'home',
         component: {
+          props: ['contents', 'arrowsShow'],
           template: `
             <div>
-              <nav id='nav' class="navbar navbar-default navbar-fixed-top navbar-inverse" > 
-                <div class="container">
-                  <ul>
-                    <li>
-                      <strong v-if='user.name' v-text="'欢迎' + user.name" ></strong>
-                    </li>
-                    <li>
-                      <form action="/logOut" method="get">
-                        <button class="btn btn-warning" v-text="user.name ? '退出登录' : '登录'"></button>
-                      </form>
-                    </li>
-                  </ul>
-                </div>
-              </nav>
               <div id="contenBox">
-                <table class="table table-hover">
+                <table class="contenBox_table table-hover">
                   <tr v-for='data in contents' :key='data.id' v-cloak>
                       <td :title='data.title'>
-                        <a target="_blank" :href='"/content/" + data.id' v-text='data.title'></a>
+                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='data.title'></a>
                       </td>
                       <td>
                         <!-- 本意转到用户页面  未做 -->
-                        <a target="_blank" :href='"/content/" + data.id' v-text='data.username'></a>
+                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='data.username'></a>
                       </td>
                       <td>
-                        <a target="_blank" :href='"/content/" + data.id' v-text='"浏览次数: " + data.browseNumber '></a>
+                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='"浏览次数: " + data.browseNumber '></a>
                       </td>
                       <td style="width:150px">
-                        <a target="_blank" :href='"/content/" + data.id' v-text='data.time'></a>
+                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='data.time'></a>
                       </td>
                   </tr>
                 </table>
               </div>
-              <div class="submit_content">
-                <div id="arrows" onselectstart="return false"><span>发帖</span></div>
+              <div class="submit_content" :style='{"z-index":this.$root.logInShow ? -1000 : 100}'>
+                <div id="arrows" v-show='arrowsShow' onselectstart="return false" @click='arrowsClick'><span>发帖</span></div>
                 <form class="form-horizontal" action="/add_post" method="post">
                   <div class="form-group">
                     <div class=" input-group"><span class="input-group-addon">标题</span>
@@ -80,39 +149,94 @@
                   </div>
                   <div class="form-group">
                     <div class="col-sm-offset-2  nopadding">
-                      <button class="btn btn-success btn-block" id="submit_content" type="submit">提交</button>
+                      <button class="btn btn-success btn-block" id="submit_content"  @click.prevent.self='submit_contentClick' type="submit">提交</button>
                     </div>
                   </div>
                 </form>
               </div>
-              <button class="btn btn-primary" style="display:none" type="button" data-toggle="modal" data-target=".bs-example-modal-sm"></button>
-              <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" id="modal_tip">
-              <div class="modal-dialog modal-sm" role="document">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h3 class="modal-title" id="gridSystemModalLabel"><span></span></h3>
-                  </div>
-                  <div class="modal-body" style="font-size:18px; text-indent:20px;"><span></span></div>
-                  <div class="modal-footer">
-                    <button class="btn btn-block" type="button" data-dismiss="modal">Close</button>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
           `,
           data() {
             return {
-              user:{},
-              contents:[],
+              
             }
           },
-          async created() {
-            let resData = await axios.get('/user')
-            this.user = resData.data.user ? resData.data.user : {}
-            this.contents = resData.data.datas
-            this.$root.user = resData.data.user
-          }
+          methods:{
+            arrowsClick: arrowsClick,
+            submit_contentClick: submit_contentClick,
+            routerPush(id) {
+              this.$router.push("/content/" + id)
+            },
+          },
+        },
+      },
+      {
+        path: '/content/:id',
+        name: 'contentData',
+        component: {
+          props: ['contentGreat', 'contentData', 'commentData'],
+          template:`
+            <div  id="conten-box">
+              <table class="table">
+                  <tr>
+                    <td id="content_title">
+                      <span v-text='contentData.title'></span>
+                      <div>
+                        <span v-text='contentData.time'></span>
+                        <span v-text='contentData.username'></span>
+                      </div>
+                    </td>  
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="user_content" v-text='contentData.content'></span> 
+                      <button type="button" class="btn btn-danger btn-xs delete_content" data-dismiss="modal" style="float:right;margin:25px 0px 0 20px" v-if='contentData.isContentUser'  >删除</button>
+                      <div class="ico">
+                        <label>
+                          <input type="checkbox" class="ico-click" :checked='contentGreat'/>
+                          <div class="ico-1 content-ico"></div>
+                        </label>
+                        <span v-text='contentData.greatNumber'></span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-for='comment in commentData' :key='comment.id' v-cloak>
+                    <td class="comment_box">
+                      <div class="switch" v-if='comment.sumComments > 0'>
+                        <button class="btn btn-block btn-xs" @click.prevent.self=''>展开评论</button>
+                      </div>
+                      <span class="user_comment" v-text='comment.comment'></span>
+                      <div class="comments">
+                        <span style="display:none" v-text='comment.id'></span>
+                        <span v-text='comment.time'></span>
+                        <span v-text='comment.username'></span>
+                        <button type="button" class="btn btn-danger btn-xs delete-btn delete_comment" data-dismiss="modal" v-if='isUser === comment.username' @click.prevent.self=''>删除</button>
+                        <span class="sumComments" v-text='comment.sumComments'></span>
+                        <button class="btn_comments_Comments comment-btn btn btn-primary btn-xs" type="button"  @click.prevent.self=''>评论</button>
+                        <div class="ico">
+                          <label>
+                            <input type="checkbox" class="ico-click" :checked= 'comment.great'/> 
+                            <div class="ico-1" @click='greatChecked(comment.id)'></div>
+                          </label>
+                          <span v-text='comment.greatNumber'></span>
+                        </div>
+                      </div>  
+                    </td>
+                  </tr>
+              </table>
+            </div>
+          `,
+          created() {
+            getcontent(this.$route.params.id) 
+          },
+          computed:{
+            isUser: function(){
+              return this.$root.user.name
+            },
+          },
+          watch:{
+            commentData
+          },
         },
       },
     ]
@@ -121,16 +245,53 @@
   let myBBS = new Vue({
     el: '#myBBS',
     data: {
-      user: null
+      user:{},
+      contents:[],
+      contentGreat:false,
+      contentData:{},
+      commentData:[],
+      logInShow:false,
+      userData:{'username':'','password':'', 'captcha':'', 'keepLogin':false},
+      shade:false,
+      arrowsShow:true,
+      buttonStatus:false,
+      next:"",
+    },
+    created() {
+      getUser() 
     },
     methods: {
-      logout() {
-
-      }
+      async log() {
+        if(this.user.name) {
+          await axios.get('/logOut')
+          this.user = {}
+        } else {
+          this.logInShow = true
+        }
+      },
+      shadeClick: shadeClick,
+      async logInORregister(num) {
+        let res 
+        this.buttonStatus = true
+        if (num === 2) res = await login(this.userData)
+        else res = await register(this.userData)
+        if (res.data && res.data.user) {
+          this.user = res.data.user
+          if (this.next === "submit_content") arrowsClick()
+        }
+        res_status(res.data)
+        this.next === ""
+        this.buttonStatus = false
+      },
+      getCaptcha:getCaptcha,
     },
-
+    watch: {
+      logInShow: function(Boolean) {
+        if (Boolean) getCaptcha()
+      },
+    },
     router,
   })
-
 </script>
+
 </html>
