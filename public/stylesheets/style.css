@@ -27,6 +27,7 @@ html,body{
   white-space:nowrap;
   position: fixed;
   top: 0;
+  z-index: 100;
   width: 100%;
   height: 100%;
   display: -webkit-flex;
@@ -47,6 +48,7 @@ html,body{
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 600px;
 }
 
 #login .container #captcha_img{
@@ -67,8 +69,12 @@ html,body{
 }
 
 @media (min-width: 768px) {
+  #login .container{
+    width: 60%;
+    
+  }
   #login #form{
-    width: 70%;
+    width: 100%;
     margin-left: -50px;
   }
 }
@@ -95,7 +101,7 @@ nav{
 }
 
 #nav {
-  position: initial;
+  position: fixed;
 }
 
 nav strong{
@@ -122,6 +128,7 @@ nav li:nth-of-type(n + 2){
 #contenBox{
   max-width: 850px;
   margin: 0px auto 0 auto;
+  transform: translateY(80px);
   box-shadow: 0 -2px 15px 2px rgba(0,0,0,0.5)
 }
 
@@ -131,7 +138,7 @@ table td {
 table.contenBox_table.table-hover{
   width: 100%;
   table-layout:fixed;
-  margin:10px 0;
+  margin:0px 0;
   border: 1px solid #ddd;
 }
 
@@ -202,7 +209,7 @@ table.contenBox_table.table-hover td:hover{
   height: 60px;
   border:30px solid transparent;
   border-right-color:#666666;
-  z-index: 1000;
+  z-index: 700;
   opacity: 1;
 }
 
@@ -247,5 +254,16 @@ table.contenBox_table.table-hover td:hover{
   position: fixed;
   width: 100%;
   height: 100%;
+  z-index: 500;
+  margin-top:0px;
   background-color:rgba(0,0,0,0.5);
+}
+
+#hid{
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  top: 0;
+  z-index: 100
 }

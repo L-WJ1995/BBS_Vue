@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <title>BBC首页</title>
   <!-- <link rel='stylesheet' href='stylesheets/content.css'> -->
-  <link rel='stylesheet' href='stylesheets/css/bootstrap.css'>
-  <link rel='stylesheet' href='stylesheets/style.css'>
-  <link rel='stylesheet' href='stylesheets/transition.css'>
+  <link rel='stylesheet' href='/stylesheets/css/bootstrap.css'>
+  <link rel='stylesheet' href='/stylesheets/style.css'>
+  <link rel='stylesheet' href='/stylesheets/transition.css'>
   <link rel="stylesheet" href="/stylesheets/content.css" />
   <style>
     [v-cloak] {
@@ -16,9 +16,6 @@
 </head>
 <body>
   <div id='myBBS'> 
-    <transition name="shade">
-      <div id="shade" v-show='shade' @click="shadeClick" v-cloak></div> 
-    </transition>
     <nav id='nav' ref='nav' class="navbar navbar-default navbar-fixed-top navbar-inverse" > 
       <div class="container">
         <ul>
@@ -32,7 +29,7 @@
       </div>
     </nav>
     <transition name="login">
-      <div id="login"  v-show="logInShow" @click.self="logInShow = false" v-cloak>
+      <div id="login"  v-show="logInShow" @click.self="logInShow = false" :style='{"z-index":logInShow ? 1000 : 0}' v-cloak>
         <div class="container">
           <form   v-show="logInShow" class="form-horizontal  col-sm-3" id="form" action="/registerORlogin" method="post">
             <div class="form-group">
@@ -74,10 +71,6 @@
     </transition>
     <router-view ref='son' 
     :contents='contents' 
-    :arrows-show='arrowsShow' 
-    :content-data='contentData'
-    :comment-data='commentData'  
-    :content-Great='contentGreat'
     > 
     </router-view>  
   </div>
@@ -98,12 +91,12 @@
     </div>
   </div>
 </body>
-<script src="javascripts/vue-2.5.17.js"></script>
-<script src="javascripts/vue-router-3.0.1.js"></script>
-<script src="javascripts/axios.min.js"></script>
-<script src="javascripts/jquery.min.js"></script>
-<script src="javascripts/bootstrap.js"></script>
-<script src="javascripts/myBBS.js"></script>
+<script src="/javascripts/vue-2.5.17.js"></script>
+<script src="/javascripts/vue-router-3.0.1.js"></script>
+<script src="/javascripts/axios.min.js"></script>
+<script src="/javascripts/jquery.min.js"></script>
+<script src="/javascripts/bootstrap.js"></script>
+<script src="/javascripts/myBBS.js"></script>
 <script>
   const router = new VueRouter({
     mode: 'history',
@@ -112,30 +105,35 @@
         path: '/',
         name: 'home',
         component: {
-          props: ['contents', 'arrowsShow'],
+          props: ['contents'],
           template: `
             <div>
+              <transition name="shade">
+                <div id="shade" v-show='shade' @click="shadeClick"v-cloak></div> 
+              </transition>
               <div id="contenBox">
                 <table class="contenBox_table table-hover">
-                  <tr v-for='data in contents' :key='data.id' v-cloak>
+                  <tr v-for='data in contents' :key='data.id' v-cloak @click.prevent='routerPush(data.id)'>
                       <td :title='data.title'>
-                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='data.title'></a>
+                        <a target="_blank"  v-text='data.title'></a>
                       </td>
                       <td>
                         <!-- 本意转到用户页面  未做 -->
-                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='data.username'></a>
+                        <a target="_blank" v-text='data.username'></a>
                       </td>
                       <td>
-                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='"浏览次数: " + data.browseNumber '></a>
+                        <a target="_blank" v-text='"浏览次数: " + data.browseNumber '></a>
                       </td>
                       <td style="width:150px">
-                        <a target="_blank" @click.prevent.self='routerPush(data.id)' v-text='data.time'></a>
+                        <a target="_blank" v-text='data.time'></a>
                       </td>
                   </tr>
                 </table>
               </div>
-              <div class="submit_content" :style='{"z-index":this.$root.logInShow ? -1000 : 100}'>
-                <div id="arrows" v-show='arrowsShow' onselectstart="return false" @click='arrowsClick'><span>发帖</span></div>
+              <div class="submit_content" :style='{"z-index":this.$root.logInShow ? -1000 : 1000}'>
+                <div id="arrows" v-show='arrowsShow' onselectstart="return false" @click='arrowsClick'>
+                  <span>发帖</span>
+                </div>
                 <form class="form-horizontal" action="/add_post" method="post">
                   <div class="form-group">
                     <div class=" input-group"><span class="input-group-addon">标题</span>
@@ -158,86 +156,235 @@
           `,
           data() {
             return {
-              
+              shade:false,
+              arrowsShow:true,
             }
           },
           methods:{
+            shadeClick: shadeClick,
             arrowsClick: arrowsClick,
             submit_contentClick: submit_contentClick,
             routerPush(id) {
-              this.$router.push("/content/" + id)
+              this.$router.push("/contentID/" + id)
             },
           },
         },
       },
       {
-        path: '/content/:id',
-        name: 'contentData',
+        path: '/contentID/:id',
+        name: 'content',
         component: {
-          props: ['contentGreat', 'contentData', 'commentData'],
+          props: [],
           template:`
-            <div  id="conten-box">
-              <table class="table">
-                  <tr>
-                    <td id="content_title">
-                      <span v-text='contentData.title'></span>
-                      <div>
-                        <span v-text='contentData.time'></span>
-                        <span v-text='contentData.username'></span>
-                      </div>
-                    </td>  
-                  </tr>
-                  <tr>
-                    <td>
-                      <span class="user_content" v-text='contentData.content'></span> 
-                      <button type="button" class="btn btn-danger btn-xs delete_content" data-dismiss="modal" style="float:right;margin:25px 0px 0 20px" v-if='contentData.isContentUser'  >删除</button>
-                      <div class="ico">
-                        <label>
-                          <input type="checkbox" class="ico-click" :checked='contentGreat'/>
-                          <div class="ico-1 content-ico"></div>
-                        </label>
-                        <span v-text='contentData.greatNumber'></span>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr v-for='comment in commentData' :key='comment.id' v-cloak>
-                    <td class="comment_box">
-                      <div class="switch" v-if='comment.sumComments > 0'>
-                        <button class="btn btn-block btn-xs" @click.prevent.self=''>展开评论</button>
-                      </div>
-                      <span class="user_comment" v-text='comment.comment'></span>
-                      <div class="comments">
-                        <span style="display:none" v-text='comment.id'></span>
-                        <span v-text='comment.time'></span>
-                        <span v-text='comment.username'></span>
-                        <button type="button" class="btn btn-danger btn-xs delete-btn delete_comment" data-dismiss="modal" v-if='isUser === comment.username' @click.prevent.self=''>删除</button>
-                        <span class="sumComments" v-text='comment.sumComments'></span>
-                        <button class="btn_comments_Comments comment-btn btn btn-primary btn-xs" type="button"  @click.prevent.self=''>评论</button>
-                        <div class="ico">
-                          <label>
-                            <input type="checkbox" class="ico-click" :checked= 'comment.great'/> 
-                            <div class="ico-1" @click='greatChecked(comment.id)'></div>
-                          </label>
-                          <span v-text='comment.greatNumber'></span>
+
+            <div>
+              <div  id="conten-box" >
+                <table class="table">
+                    <tr>
+                      <td id="content_title">
+                        <span v-text='contentData.title'></span>
+                        <div>
+                          <span v-text='contentData.time' style="margin-top:1px"></span>
+                          <span v-text='contentData.username' style="margin-top:1px"></span>
                         </div>
-                      </div>  
-                    </td>
-                  </tr>
-              </table>
+                      </td>  
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="user_content" v-text='contentData.content'></span> 
+                        <button type="button" class="btn btn-danger btn-xs delete_content" data-dismiss="modal" style="float:right;margin:25px 0px 0 20px" v-if='contentData.username === isUser'  @click='deleteContent(contentData.id)'>删除</button>
+                        <div class="ico">
+                          <label  @click.prevent.self>
+                            <input type="checkbox" class="ico-click" :checked='greatContent'/>
+                            <div class="ico-1 content-ico" @click='subGreatContent(contentData.id)'></div>
+                          </label>
+                          <span v-text='contentData.greatNumber'></span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-for='(comment, index) in commentData' :key='comment.id' >
+                      <td class="comment_box">
+                        <div class="switch" v-if='comment.sumComments > 0'>
+                          <button class="btn btn-block btn-xs" @click.prevent.self='routerPush(comment.id)'>展开评论</button>
+                        </div>
+                        <span class="user_comment" v-text='comment.comment'></span>
+                        <div class="comments">
+                          <span style="display:none" v-text='comment.id'></span>
+                          <span v-text='comment.time' style="margin-top:27.5px"></span>
+                          <span v-text='comment.username' style="margin-top:27.5px"></span>
+                          <button type="button" class="btn btn-danger btn-xs delete-btn delete_comment" data-dismiss="modal" v-if='isUser === comment.username' @click.prevent.self='deleteCommentBtn(comment.id ,index)'>删除</button>
+                          <span class="sumComments" v-text='comment.sumComments' style="margin-top:27.5px"></span>
+                          <button class="btn_comments_Comments comment-btn btn btn-primary btn-xs" type="button"  @click.prevent.self='commentBtn(comment, index)'>评论</button>
+                          <div class="ico">
+                            <label @click.prevent.self>
+                              <input type="checkbox" class="ico-click" :checked= 'greatComment(comment.id)'/> 
+                              <div class="ico-1" @click='subGreatComment(comment.id, index, $event)'></div>
+                            </label>
+                            <span v-text='comment.greatNumber'></span>
+                          </div>
+                        </div>  
+                      </td>
+                    </tr>
+                </table>
+              </div>
+              <div id="hid" @click.self="hid" v-if="hidden">
+              </div>
+              <div class="commentsComments" >
+                <form class="form-horizontal" action="/add_commentsComments" method="post">
+                  <div class="form-group">
+                    <div class="nopadding">
+                      <button type="button" class="btn btn-primary  btn-block" style="pointer-events:none" v-text='"评论 " + temporaryData.username'></button>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="nopadding">
+                      <textarea class="form-control submit_text" rows="10"  style="resize:none" name="content" autocomplete="off" v-model="commentCommentText"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-sm-offset-2  nopadding">
+                      <button  type="submit" class=" btn btn-success btn-block" @click.prevent.self='subCommentComment(temporaryData.id)'>提交评论</button>
+                    </div>
+                  </div>
+                </form>
+              </div>     
+              <div class="submit_content_box" style="z-index: 600;">
+                <div v-show='arrowsShow' id="arrows" style="margin-top:-60px;" onselectstart="return false" @click='arrowsClick1'>
+                  <span>评论</span>
+                </div>
+                <form class="form-horizontal" action="/add_comment" method="post">
+                  <div class="form-group"> 
+                    <div class="nopadding">
+                      <textarea class="form-control submit_text" rows="10"  style="resize:none" name="content"  autocomplete="off" v-model='commentText'></textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-sm-offset-2  nopadding">
+                      <button type="submit" class=" btn btn-success btn-block" @click.prevent.self='subComment'>提交评论</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <router-view :show='show'></router-view> 
             </div>
+
           `,
-          created() {
-            getcontent(this.$route.params.id) 
+          async created() {
+            let res = await axios.get('/content/' + this.$route.params.id)
+            this.contentData = res.data.contentData
+            this.commentData = res.data.commentData
+          },
+          async mounted() {
+            this.contenBoxShow=true
+          },
+          data(){
+            return {
+              contentData:{},
+              commentData:[],
+              commentText:'',
+              commentCommentText:'',
+              temporaryData:{},
+              hidden:false,
+              show:false,
+              arrowsShow:true,
+            }
           },
           computed:{
             isUser: function(){
               return this.$root.user.name
             },
+            greatContent: function() {
+              if (!this.$root.user.greatHistory) return false
+              return this.$root.user.greatHistory.indexOf(`[${this.$route.params.id}]`) >= 0
+            },
+
+          },
+          methods:{
+            deleteContent: deleteContent,
+            subGreatContent: subGreatContent,
+            subGreatComment: subGreatComment,
+            greatComment: function(id) {
+              if (!this.$root.user.greatCommentsHistory) return false
+              return this.$root.user.greatCommentsHistory.indexOf(`[${id}]`) >= 0
+            },
+            arrowsClick1:arrowsClick1,
+            commentBtn:commentBtn,
+            subComment:subComment,
+            deleteCommentBtn:deleteCommentBtn,
+            subCommentComment:subCommentComment,
+            routerPush: function(id) {
+              this.$router.push(`/contentID/${this.$route.params.id}/commentID/${id}`)
+            },
+            hid:hid,
           },
           watch:{
-            commentData
+            
           },
         },
+        children:[{
+          path: 'commentID/:commentID',
+          name: 'commentComments',
+          component: {
+            props:[],
+            template:`
+            <div id="boxComment" style="z-index:900"  @click.self='boxCommentShow=false'>
+              <transition name="boxComment"> 
+                <div class="comment_comment_box" v-if='boxCommentShow' >
+                  <ul>
+                    <li v-for= 'data in commentComments' :key='data.id' v-cloak>
+                      <span v-text='data.tousername ? data.username + " 评论 " + data.tousername + " :" : data.username + " 评论 ："'></span>
+                      <br /> 
+                      <span v-text='data.text'></span>
+                      <div class="reply_tip">
+                        <span style="float:right; margin:3px 15px 0 0" v-text='data.time'></span>
+                        <button type="button" class="btn btn-xs  temp btn-primary" v-if='!isUser(data.username)'>评论</button>
+                        <button type="button" class="btn btn-xs  temp btn-danger" v-if='isUser(data.username)'>删除</button>
+                        <button type="button" class="btn btn-xs  btn-success lookTalk" v-if='data.tousername'>查看对话</button>
+                      </div>
+                      <div class="reply_text" style="display:none">
+                          <input type="text" maxlength="1200"/>
+                          <button class="btn btn-xs notClick "  disabled>提交</button>
+                          <button class="btn btn-xs">取消</button>
+                      </div>
+                    </li> 
+                  </ul>
+                  <ul style="" class="lookTalk_container">
+                    <li class="clone_lookTalk">
+                      <span></span>
+                      <br />  
+                      <span style="font-size:16px"></span>
+                      <br /> 
+                      <span style="float:right"></span>
+                    </li>
+                  </ul>
+                  <button class="return btn btn-primary" >返  回</button>
+                </div>
+              </transition>
+            </div>
+            `,
+            async created() {
+              let res = await getCommentComments(this.$route.params.commentID)
+              this.commentComments = res.data.commentCommentsData
+            },
+            mounted() {
+              this.boxCommentShow=true
+            },
+            data() {
+              return {
+                commentComments:[],
+                boxCommentShow:false,
+              }
+            },
+            methods:{
+              isUser: function(username){
+                return this.$root.user.name === username
+              },
+            },
+            computed:{
+              
+            },
+          },
+        },],
       },
     ]
   })
@@ -247,14 +394,10 @@
     data: {
       user:{},
       contents:[],
-      contentGreat:false,
-      contentData:{},
-      commentData:[],
       logInShow:false,
       userData:{'username':'','password':'', 'captcha':'', 'keepLogin':false},
-      shade:false,
-      arrowsShow:true,
       buttonStatus:false,
+      commentsComments:{},
       next:"",
     },
     created() {
@@ -269,18 +412,20 @@
           this.logInShow = true
         }
       },
-      shadeClick: shadeClick,
       async logInORregister(num) {
         let res 
         this.buttonStatus = true
         if (num === 2) res = await login(this.userData)
         else res = await register(this.userData)
-        if (res.data && res.data.user) {
-          this.user = res.data.user
-          if (this.next === "submit_content") arrowsClick()
+        if (res && res.data ) {
+          res_status(res.data)
+          if (res.data.user) {
+            this.user = res.data.user
+            if (this.next === "submit_content") arrowsClick()
+            res_status(res.data)
+            this.next === ""
+          }
         }
-        res_status(res.data)
-        this.next === ""
         this.buttonStatus = false
       },
       getCaptcha:getCaptcha,
@@ -289,6 +434,8 @@
       logInShow: function(Boolean) {
         if (Boolean) getCaptcha()
       },
+    },
+    computed:{
     },
     router,
   })

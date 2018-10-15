@@ -2,7 +2,7 @@ let shade_status
 let submit_content_box_status
 let contentID = window.location.href.split("/").pop()
 let comment_comment_box
-
+status_
 arrows.onclick = () => {
   shade.style.display = "block"
   setTimeout(() => shade.style["background-color"] = "rgba(0,0,0,0.5)" ,0)

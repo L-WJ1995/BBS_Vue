@@ -70,7 +70,7 @@ function input_judge(userData) {
   } else return true
 }
 
-function res_status(data) {
+function res_status(data, self) {
   switch(data.status) {
     case 100: {
       let str = [data.type === "login" ? "登录成功" : "注册成功", "欢迎访问BBS！"]
@@ -83,8 +83,29 @@ function res_status(data) {
       break
     }
 
+    case 101: {
+      $(".modal-title span").text("评论成功")
+      $(".modal-body span").text("即将关闭提示！")
+      $(".modal-footer button").removeClass("btn-warning").addClass("btn-success").text("Close")
+      $(".bs-example-modal-sm").modal("show")
+      self.commentData[data.index].sumComments += 1
+      break
+    }
+
+    case 108: {
+      $(".modal-title span").text("评论成功")
+      $(".modal-body span").text("即将关闭提示！")
+      $(".modal-footer button").removeClass("btn-warning").addClass("btn-success").text("Close")
+      $(".bs-example-modal-sm").modal("show")
+      self.commentData.push(data.data)
+      self.commentText = ""
+      shadeClick()
+      break
+    }
+
     case 201: {
-      username.value = captcha.value = ""
+      getCaptcha()
+      myBBS.userData.username = myBBS.userData.captcha = ""
       let str = data.type === "login" ? ["登录失败", "用户名不存在,请重试！"] : ["注册失败", "用户名已存在,请更换用户名！"]
       $(".modal-title span").text(str[0])
       $(".modal-body span").text(str[1])
@@ -93,7 +114,8 @@ function res_status(data) {
     }
 
     case 202: {
-      username.value = password.value = captcha.value = ""
+      getCaptcha()
+      myBBS.userData.username = myBBS.userData.password = myBBS.userData.captcha = ""
       $(".modal-title span").text("登录失败")
       $(".modal-body span").text("用户名或密码错误,请重试！")
       $(".modal-footer button").addClass("btn-warning").text("Close")
@@ -101,7 +123,8 @@ function res_status(data) {
     }
 
     case 203: {
-      captcha.value = ""
+      myBBS.userData.captcha = ""
+      getCaptcha()
       let str = data.type === "login" ? ["登录失败", "验证码输入有误,请重试！"] : ["注册失败", "验证码输入有误,请重试！"]
       $(".modal-title span").text(str[0])
       $(".modal-body span").text(str[1])
@@ -110,7 +133,8 @@ function res_status(data) {
     }
 
     case 205: {
-      captcha.value = ""
+      myBBS.userData.captcha = ""
+      getCaptcha()
       let str = data.type === "login" ? ["登录失败", "验证码超时,请重试！"] : ["注册失败", "验证码超时,请重试！"]
       $(".modal-title span").text(str[0])
       $(".modal-body span").text(str[1])
@@ -120,29 +144,39 @@ function res_status(data) {
 
     case 300: {
       $(".modal-title span").text("发帖成功")
-      $(".modal-body span").text("正在跳转")
+      $(".modal-body span").text("即将关闭提示！")
       $(".modal-footer button").removeClass("btn-warning").addClass("btn-success").text("Close")
       $(".bs-example-modal-sm").modal("show")
-      getcontent(data.id)
+      self.shade = false
       setTimeout(() => {
-        myBBS.$router.push("./content/" + data.id)
-        myBBS.shade = false
-        myBBS.arrowsShow = true
+        myBBS.$router.push("./contentID/" + data.content.id)
+        self.arrowsShow = true
         arrows.parentNode.classList.remove("trans-in", "trans-out")
         arrows.style.display = "block"
-      }, 300)
+        myBBS.contents.unshift(data.content)
+      },600)
       break
     }
 
     case 50: {
       $(".modal-title span").text("删除成功")
-      $(".modal-body span").text("正在返回")
+      $(".modal-body span").text("即将关闭提示！")
       $(".modal-footer button").removeClass("btn-warning").addClass("btn-success").text("Close")
-      $(".bs-example-modal-sm").modal("show")
+      setTimeout(() => {
+        $(".bs-example-modal-sm").modal("hide")
+      }, 600)
       myBBS.$router.push("/")
       break
     }
 
+    case 51: {
+      $(".modal-title span").text("删除成功")
+      $(".modal-body span").text("即将关闭提示！")
+      $(".modal-footer button").removeClass("btn-warning").addClass("btn-success").text("Close")
+      $(".bs-example-modal-sm").modal("show")
+      self.commentData.splice(data.index, 1)
+      break
+    }
   }
   modal_status()
 }
@@ -152,7 +186,7 @@ function modal_status() {
   $(".bs-example-modal-sm").modal("show")
   let modal_ID = setTimeout(() => {
     $(".bs-example-modal-sm").modal("hide")
-  }, 1500)
+  }, 1000)
   $(".bs-example-modal-sm").on("hidden.bs.modal", () => {
     clearTimeout(modal_ID)
     $(".bs-example-modal-sm").off("hidden.bs.modal")
@@ -162,30 +196,62 @@ function modal_status() {
 
 
 function shadeClick() {
-  myBBS.shade = false
-  if (!myBBS.arrowsShow && arrows) {
+  this.shade = false
+  if (!this.arrowsShow && arrows) {
     arrows.parentNode.classList.add("trans-out")
     setTimeout(() => {
-      myBBS.arrowsShow = true
+      this.arrowsShow = true
       arrows.parentNode.classList.remove("trans-in", "trans-out")
       arrows.style.display = "block"
     },600)
   }
 }
 
+function hid(){
+  setTimeout(() => {this.hidden=false},600)
+  if (!this.arrowsShow && arrows) {
+    arrows.parentNode.classList.add("trans-out")
+    setTimeout(() => {
+      this.arrowsShow = true
+      arrows.parentNode.classList.remove("trans-in", "trans-out")
+      arrows.style.display = "block"
+    },600)
+  }
+  if (myBBS.commentsComments.length) {
+    myBBS.commentsComments.css({'height':'0px'})
+    myBBS.commentsComments = {}
+  }
+}
 
 function arrowsClick() {
   if (!myBBS.user.name) {
     $(".modal-title span").text("错误！")
-    $(".modal-body span").text("未登陆,无法发布帖子！")
+    $(".modal-body span").text("未登陆,无法发布内容！")
     $(".modal-footer button").addClass("btn-warning").text("Close")
     modal_status()
     myBBS.next = "submit_content"
     myBBS.logInShow = true
     return
   } else {
-      myBBS.shade = true
-      myBBS.arrowsShow = false
+      this.shade = true
+      this.arrowsShow = false
+      arrows.parentNode.classList.add("trans-in")
+  }
+
+}
+
+function arrowsClick1() {
+  if (!myBBS.user.name) {
+    $(".modal-title span").text("错误！")
+    $(".modal-body span").text("未登陆,无法发布内容！")
+    $(".modal-footer button").addClass("btn-warning").text("Close")
+    modal_status()
+    myBBS.next = "submit_content"
+    myBBS.logInShow = true
+    return
+  } else {
+      this.hidden = true
+      this.arrowsShow = false
       arrows.parentNode.classList.add("trans-in")
   }
 
@@ -206,25 +272,154 @@ function submit_contentClick() {
           content: submit_text.value,
         }
       }).then((res) => {
-          res_status(res.data)
+          res_status(res.data, this)
       })
   }
 }
 
-function getcontent(id) {
-  axios.get('/content/' + id)
-  .then((res) => {
-    myBBS.contentGreat = res.data.contentGreat
-    myBBS.contentData = res.data.contentData
-    myBBS.commentData = res.data.commentData
-  })
-}
+
 
 function deleteContent(id) {
   axios({
     method:'delete',
-    url:`/delete/content/` + contentID,
+    url:`/delete/content/` + id,
   }).then((res) => {
+      for (let i = 0; i < myBBS.contents.length; i++) {
+        if (myBBS.contents[i].id === res.data.id) {
+          myBBS.contents.splice(i, 1)
+          break
+        }
+      }
       res_status(res.data)
   })
+}
+
+
+function subGreatContent(id) {
+  if (!myBBS.user.name) {
+    $(".modal-title span").text("错误！")
+    $(".modal-body span").text("未登陆,无法点赞！")
+    $(".modal-footer button").addClass("btn-warning").text("Close")
+    modal_status()
+    myBBS.logInShow = true
+    return
+  } else {
+    axios({
+      method:'put',
+      url:`/greatNumber/${id}/1/${this.greatContent ? 0 : 1}/_`,
+    }).then((res) => {
+        if(res.data.status === 'error') return 
+        if (this.greatContent) {
+          myBBS.user.greatHistory = myBBS.user.greatHistory.replace(`[${id}]`,"")
+          this.contentData.greatNumber -= 1
+        } else {
+          myBBS.user.greatHistory = myBBS.user.greatHistory + `[${id}]`
+          this.contentData.greatNumber += 1
+        }
+    })  
+  }
+}
+
+function subGreatComment(id, index, e) {
+  if (!myBBS.user.name) {
+    $(".modal-title span").text("错误！")
+    $(".modal-body span").text("未登陆,无法点赞！")
+    $(".modal-footer button").addClass("btn-warning").text("Close")
+    modal_status()
+    myBBS.logInShow = true
+    return
+  } else {  
+    axios({
+      method:'put',
+      url:`/greatNumber/${this.contentData.id}/2/${$(e.target).prev().prop('checked') ? 0 : 1}/${id}`,
+    }).then((res) => {
+        if(res.data.status === 'error') return 
+        if ($(e.target).prev().prop('checked')) {
+          myBBS.user.greatCommentsHistory = myBBS.user.greatCommentsHistory.replace(`[${id}]`,"")
+          this.commentData[index].greatNumber -= 1
+        } else {
+          myBBS.user.greatCommentsHistory = myBBS.user.greatCommentsHistory + `[${id}]`
+          this.commentData[index].greatNumber += 1
+        }
+    })  
+  }
+}
+
+function commentBtn(data, index) {
+  if (!myBBS.user.name) {
+    $(".modal-title span").text("错误！")
+    $(".modal-body span").text("未登陆,无法评论！")
+    $(".modal-footer button").addClass("btn-warning").text("Close")
+    modal_status()
+    myBBS.logInShow = true
+    return
+  } 
+  $('.submit_content_box').css({'z-index':'0'})
+  this.hidden = true
+  this.temporaryData = data
+  this.temporaryData.index = index
+  let el = $('.commentsComments form')
+  myBBS.commentsComments = el
+  el.css({'height':'320px'})
+}
+
+function subComment() {
+  if (!myBBS.user.name) {
+    $(".modal-title span").text("错误！")
+    $(".modal-body span").text("未登陆,无法评论！")
+    $(".modal-footer button").addClass("btn-warning").text("Close")
+    modal_status()
+    myBBS.logInShow = true
+    return
+  } 
+  axios({
+    method:'post',
+    url:'/add_comment',
+    data:{
+        text: this.commentText,
+        contentID:this.contentData.id,
+    }
+  }).then((res) => {
+    res_status(res.data, this)
+  })  
+}
+
+function deleteCommentBtn(id, index) {
+  axios({
+    method:'delete',
+    url:`/delete/comment/${this.contentData.id}/${id}`,
+  }).then((res) => {
+      res.data.index = index
+      res_status(res.data, this)
+  })
+}
+
+function subCommentComment(id, index) {
+  if (!myBBS.user.name) {
+    hid.call(this)
+    $(".modal-title span").text("错误！")
+    $(".modal-body span").text("未登陆,无法评论！")
+    $(".modal-footer button").addClass("btn-warning").text("Close")
+    modal_status()
+    myBBS.logInShow = true
+    return
+  } else {
+    axios({
+      method:'post',
+      url:'/add_commentsComments',
+      data:{
+          text: this.commentCommentText,
+          contentID:this.contentData.id,
+          commentid:id,
+      }
+    }).then((res) => {
+      hid.call(this)
+      res.data.index = this.temporaryData.index
+      res_status(res.data, this)
+    })  
+  }
+}
+
+function getCommentComments(id) {
+  return axios('/commentsComments/' + id)
 }

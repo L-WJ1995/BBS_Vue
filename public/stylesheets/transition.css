@@ -35,3 +35,23 @@
 .shade-leave-to{
   background-color:transparent;
 }
+
+
+
+
+.boxComment-enter-active {
+  opacity: 1;
+  transition: all .6s linear;
+}
+.boxComment-leave-active {
+  opacity: 1;
+  transition: all .6s linear;
+}
+
+.boxComment-enter{
+  opacity: 0;
+}
+
+.boxComment-leave-to{
+  opacity: 0;
+}

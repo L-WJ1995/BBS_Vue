@@ -1,7 +1,8 @@
 #conten-box{
   width: 900px;
-  margin: 50px auto 0 auto;
+  margin: 0px auto 0 auto;
   box-shadow: 0 0 15px 8px rgba(0,0,0,0.5);
+  transform: translateY(80px);
 }
 
 table .user_content,table .user_comment{
@@ -46,6 +47,9 @@ table.table.table-hover td{
 }
 
 
+table.table tr:not(:nth-of-type(1)){
+  border-top: 1px solid rgba(0,0,0,.2);
+}
 
 .submit_content_box .form-horizontal .form-group{
   margin-left:0;
@@ -63,10 +67,10 @@ table.table.table-hover td{
 }
 
 .submit_content_box{
-  z-index: 100;
+  z-index: 600;
   width:700px; 
   position: fixed;
-  margin-top:-155px;
+  margin-top:-115px;
   top: 50%;
   padding: 0 60px;
   left:100%;
@@ -168,21 +172,13 @@ table.table.table-hover td{
     display: none;
 }
 
+
 .ico-click:checked ~ div {
     background-position: -1363px center;
-    transition: background-color 1.5s;
     transition: background-position 1.5s steps(28);
 }
 
-#shade{
-  display: none;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background-color:transparent;
-  z-index: 100;
-  transition: .6s ease;
-}
+
 
 table tr:nth-of-type(n + 2) td > span:first-child{
   font-size: 16px;
@@ -305,39 +301,40 @@ table tr:nth-of-type(n + 2) td > span.user_comment{
   }
 }
 
-
+#boxComment{
+  width: 100%;
+  height: calc(100% - 51px);
+  position: fixed;
+  top:51px;
+  left:0;
+  background-color: rgba(0,0,0,.5);
+}
 
 .comment_comment_box{
+  z-index: 800;
   word-break: break-all;
   overflow: hidden;
   position: fixed;
-  display: none;
-  opacity:0;
   width: 700px;
   height: 600px;
   top:70px;
   left:0;
   right: 0;
   margin:auto;
-  z-index: 100;
   transition: .6s linear;
-}
-
-.comment_comment_box_in{
-  opacity:1;
 }
 
 
 .comment_comment_box ul{
   overflow: auto;
   height: 100%;
-  background-color:rgba(255,255,255,0.6);
+  background-color:rgba(255,255,255,0.9);
   padding:25px 70px 25px 80px;
   margin-bottom: 0;
 }
 
 .comment_comment_box ul:first-child{
-  margin-left:700px;
+/*   margin-left:700px; */
   transition: .6s linear;
   width: 683px;
 }
@@ -348,10 +345,12 @@ table tr:nth-of-type(n + 2) td > span.user_comment{
 }
 
 
-.comment_comment_box ul li{
+.comment_comment_box ul li {
   width: 100%;
 }
-
+.comment_comment_box ul li div.reply_tip > button{
+  float: right;
+}
 .comment_comment_box ul li:hover > div.reply_tip > button{
   opacity: 1;
   transition: 1s linear;
@@ -441,14 +440,13 @@ table tr:nth-of-type(n + 2) td > span.user_comment{
   padding:25px 70px 25px 80px;
   transition:margin-left .6s linear;
 }
-
-.comment_box .comment_comment_box .return{
+.comment_comment_box .return{
   float: none;
   margin:0;
-  width: 700px;
+  width: 683px;
   line-height: 35px;
-  height: 0px;
-  font-size: 0px;
+  height: 33px;
+  font-size: 15px;
   vertical-align: middle;
   position: fixed;
   margin-top:20px;
@@ -457,7 +455,7 @@ table tr:nth-of-type(n + 2) td > span.user_comment{
   border: none;
 }
 
-.comment_box .comment_comment_box .return_in{
+.comment_comment_box .return_in{
   height: 33px;
   font-size: 15px;
   transition:height .6s linear, font-size 0s  linear .6s;
