@@ -160,7 +160,7 @@ router.post('/replyComment', async (req, res, next) => {     //提交评论的�
            req.user.id - 0, req.user.name, req.body.commentsCommentsId - 0, req.body.commentid - 0, req.body.tousername, time, req.body.text, req.body.contentID - 0)
     if (req.body.tousername === req.user.name) isCommentuser = true
     let commentCommentsData = await db.get('SELECT * FROM commentsComments WHERE userid =? AND time =?', req.user.id - 0, time)
-    res.json({status:108, msg:"评论成功", user:req.user.name, commentCommentsData})
+    res.json({status:109, msg:"评论成功", commentCommentsData})
   } else user_error(req, res)
 })
 
@@ -168,7 +168,7 @@ router.post('/replyComment', async (req, res, next) => {     //提交评论的�
 router.get('/usersTalk/:contentID/:commentid/:lookUserID/:tousername', async (req, res, next) => {     //获取对话评论
   let data = await db.all('SELECT * FROM commentsComments WHERE contentid=? AND commentid=? AND (userid=? OR username=?) ORDER BY id ASC', 
     req.params.contentID - 0, req.params.commentid - 0, req.params.lookUserID - 0, decodeURI(req.params.tousername))
-  res.json({status:109, data, msg:"拉取成功"})  
+  res.json({status:119, data, msg:"拉取成功"})  
 })
 
 

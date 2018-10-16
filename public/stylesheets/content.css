@@ -334,10 +334,10 @@ table tr:nth-of-type(n + 2) td > span.user_comment{
 }
 
 .comment_comment_box ul:first-child{
-/*   margin-left:700px; */
   transition: .6s linear;
   width: 683px;
 }
+
 
 .comment_comment_box ul.move_in{
   margin-left:0px;
@@ -443,10 +443,10 @@ table tr:nth-of-type(n + 2) td > span.user_comment{
 .comment_comment_box .return{
   float: none;
   margin:0;
-  width: 683px;
+  width: 700px;
   line-height: 35px;
-  height: 33px;
-  font-size: 15px;
+  height: 0px;
+  font-size: 0px;
   vertical-align: middle;
   position: fixed;
   margin-top:20px;

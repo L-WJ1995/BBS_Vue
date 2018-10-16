@@ -23,6 +23,7 @@
             <strong v-if='user.name' v-text="'欢迎' + user.name" ></strong>
           </li>
           <li>
+            <button @click='returnHome' class="btn  btn-primary" v-if='!isHome' v-text="'返回首页'" style="margin-right:15px;"></button>
             <button @click='log' class="btn btn-warning" v-text="user.name ? '退出登录' : '登录'"></button>
           </li>
         </ul>
@@ -165,6 +166,7 @@
             arrowsClick: arrowsClick,
             submit_contentClick: submit_contentClick,
             routerPush(id) {
+              this.$root.isHome = false
               this.$router.push("/contentID/" + id)
             },
           },
@@ -265,7 +267,16 @@
                   </div>
                 </form>
               </div>
-              <router-view :show='show'></router-view> 
+              <div id="boxComment" style="z-index:900"  v-if='boxCommentShow' @click.self='boxCommentClick'>
+                <router-view 
+                :boxCommentShow='boxCommentShow' 
+                :commentComments='commentComments'
+                :usersTalk='usersTalk'
+                @deleteComments='deleteComments'
+                @repComments='repComments'
+                @lookUsersTalk='lookUsersTalk'
+                ></router-view> 
+              </div>
             </div>
 
           `,
@@ -287,6 +298,9 @@
               hidden:false,
               show:false,
               arrowsShow:true,
+              boxCommentShow:false,
+              commentComments:[],
+              usersTalk:[],
             }
           },
           computed:{
@@ -312,10 +326,26 @@
             subComment:subComment,
             deleteCommentBtn:deleteCommentBtn,
             subCommentComment:subCommentComment,
-            routerPush: function(id) {
+            routerPush: async function(id) {
+              this.boxCommentShow = true
+              let res = await getCommentComments(id)
+              this.commentComments = res.data.commentCommentsData
               this.$router.push(`/contentID/${this.$route.params.id}/commentID/${id}`)
             },
             hid:hid,
+            boxCommentClick: function() {
+              this.boxCommentShow = false
+              this.$router.push(`/contentID/${this.contentData.id}`)
+            },
+            deleteComments:deleteComments,
+            repComments:repComments,
+            lookUsersTalk:async function (comID, lookUserID, touser, el){
+              let res = await lookUsersTalks(this.contentData.id, comID, lookUserID, touser)
+              this.usersTalk = res.data.data
+              $(el).parents('ul').first().css('margin-left','-682px')
+              $(el).parents('.comment_comment_box').find('.lookTalk_container').addClass('lookTalk_container_in')
+              $(el).parents('.comment_comment_box').find('.return').addClass('return_in')
+            },
           },
           watch:{
             
@@ -325,63 +355,83 @@
           path: 'commentID/:commentID',
           name: 'commentComments',
           component: {
-            props:[],
+            props:['boxCommentShow', 'commentComments','usersTalk'],
             template:`
-            <div id="boxComment" style="z-index:900"  @click.self='boxCommentShow=false'>
               <transition name="boxComment"> 
                 <div class="comment_comment_box" v-if='boxCommentShow' >
-                  <ul>
-                    <li v-for= 'data in commentComments' :key='data.id' v-cloak>
+                  <ul >
+                    <li v-for= '(data, index) in commentComments' :key='data.id' v-cloak style="display: flow-root;">
                       <span v-text='data.tousername ? data.username + " 评论 " + data.tousername + " :" : data.username + " 评论 ："'></span>
                       <br /> 
                       <span v-text='data.text'></span>
                       <div class="reply_tip">
                         <span style="float:right; margin:3px 15px 0 0" v-text='data.time'></span>
-                        <button type="button" class="btn btn-xs  temp btn-primary" v-if='!isUser(data.username)'>评论</button>
-                        <button type="button" class="btn btn-xs  temp btn-danger" v-if='isUser(data.username)'>删除</button>
-                        <button type="button" class="btn btn-xs  btn-success lookTalk" v-if='data.tousername'>查看对话</button>
+                        <button type="button" class="btn btn-xs  temp btn-primary" v-if='!isUser(data.username)' @click.self='replyBtn($event)'>评论</button>
+                        <button type="button" class="btn btn-xs  temp btn-danger" v-if='isUser(data.username)' @click.self="delComments(data.id, index)">删除</button>
+                        <button type="button" class="btn btn-xs  btn-success lookTalk" v-if='data.tousername' @click.self="lookUsersTalk(data.userid, data.tousername, $event.target)">查看对话</button>
                       </div>
                       <div class="reply_text" style="display:none">
-                          <input type="text" maxlength="1200"/>
-                          <button class="btn btn-xs notClick "  disabled>提交</button>
-                          <button class="btn btn-xs">取消</button>
+                          <input type="text" maxlength="1200" v-model='text'/>
+                          <button :class="textClass" :disabled='text.trim().length === 0' @click.self='repComments(data.id, data.username, index, $event.target)'>提交</button>
+                          <button class="btn btn-xs" @click.self='cancelBtn($event)'>取消</button>
                       </div>
                     </li> 
                   </ul>
                   <ul style="" class="lookTalk_container">
-                    <li class="clone_lookTalk">
-                      <span></span>
+                    <li class="lookTalk" v-for='data in usersTalk' :key='data.id'>
+                      <span v-text='data.tousername ? data.username + " 评论 " + data.tousername + " :" : data.username + " 评论 ："'></span>
                       <br />  
-                      <span style="font-size:16px"></span>
+                      <span style="font-size:16px" v-text='data.text'></span>
                       <br /> 
-                      <span style="float:right"></span>
+                      <span style="float:right" v-text='data.time'></span>
                     </li>
                   </ul>
-                  <button class="return btn btn-primary" >返  回</button>
-                </div>
-              </transition>
-            </div>
+                  <button class="return btn btn-primary" @click.prevent.self='returnBtn($event.target)'>返  回</button>
+                </transition>
+              </div>
             `,
-            async created() {
-              let res = await getCommentComments(this.$route.params.commentID)
-              this.commentComments = res.data.commentCommentsData
-            },
-            mounted() {
-              this.boxCommentShow=true
-            },
-            data() {
+            data(){
               return {
-                commentComments:[],
-                boxCommentShow:false,
+                text:'',
               }
             },
             methods:{
               isUser: function(username){
                 return this.$root.user.name === username
               },
+              delComments: function(id, index) {
+                this.$emit('deleteComments', this.$route.params.commentID, id, index)
+              },
+              replyBtn: function(e) {
+                $(e.target).parent().css('display','none')
+                $(e.target).parent().next().css('display','block')
+                this.text = ''
+              },
+              cancelBtn: function(e) {
+                $(e.target).parent().css('display','none')
+                $(e.target).parent().prev().css('display','block')
+              },
+              repComments: function(id, touser, index, el){
+                this.$emit('repComments', this.text, this.$route.params.commentID, id, touser, index, el)
+              },
+              lookUsersTalk: function(lookUserID, touser, el) {
+                this.$emit('lookUsersTalk', this.$route.params.commentID, lookUserID, touser, el)
+              },
+              returnBtn: function(el){
+                $(el).prev().prev().css('margin-left','0px')
+                $(el).prev().removeClass('lookTalk_container_in')
+                $(el).removeClass('return_in')
+              },
             },
             computed:{
-              
+              textClass: function() {
+                return{
+                  'btn': true,
+                  'btn-xs': true,
+                  'notClick': this.text.trim().length === 0, 
+                  'btn-success': this.text.trim().length !== 0
+                }
+              },
             },
           },
         },],
@@ -429,6 +479,9 @@
         this.buttonStatus = false
       },
       getCaptcha:getCaptcha,
+      returnHome: function(){
+        this.$router.push(`/`)
+      },
     },
     watch: {
       logInShow: function(Boolean) {
@@ -436,6 +489,9 @@
       },
     },
     computed:{
+      isHome:function(){
+        return this.$route.name === 'home'
+      },
     },
     router,
   })

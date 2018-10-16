@@ -99,7 +99,16 @@ function res_status(data, self) {
       $(".bs-example-modal-sm").modal("show")
       self.commentData.push(data.data)
       self.commentText = ""
-      shadeClick()
+      hid(self)
+      break
+    }
+
+    case 109: {
+      $(".modal-title span").text("评论成功")
+      $(".modal-body span").text("即将关闭提示！")
+      $(".modal-footer button").removeClass("btn-warning").addClass("btn-success").text("Close")
+      $(".bs-example-modal-sm").modal("show")
+      self.commentComments.push(data.commentCommentsData)  
       break
     }
 
@@ -177,6 +186,8 @@ function res_status(data, self) {
       self.commentData.splice(data.index, 1)
       break
     }
+
+
   }
   modal_status()
 }
@@ -207,8 +218,9 @@ function shadeClick() {
   }
 }
 
-function hid(){
-  setTimeout(() => {this.hidden=false},600)
+function hid(self){
+  if (self) setTimeout(() => {self.hidden=false},600)
+  else setTimeout(() => {this.hidden=false},600)
   if (!this.arrowsShow && arrows) {
     arrows.parentNode.classList.add("trans-out")
     setTimeout(() => {
@@ -422,4 +434,55 @@ function subCommentComment(id, index) {
 
 function getCommentComments(id) {
   return axios('/commentsComments/' + id)
+}
+
+function deleteComments(comID, comsID, index){
+  axios({
+    method:'delete',
+    url:`/delete/commentsComments/` + this.contentData.id + "/" + comID + "/" + comsID,
+  }).then((res) => {
+      this.commentComments.splice(index, 1)
+      for (let i = 0; i < this.commentData.length; i++) {
+        if (this.commentData[i].id === comID - 0) return this.commentData[i].sumComments -= 1
+      }
+  })
+}
+
+function repComments(text, comID, comsID, touser, index, el) {
+  if (!myBBS.user.name) {
+    hid.call(this)
+    $(".modal-title span").text("错误！")
+    $(".modal-body span").text("未登陆,无法评论！")
+    $(".modal-footer button").addClass("btn-warning").text("Close")
+    modal_status()
+    myBBS.logInShow = true
+    return
+  } 
+  axios({
+    method:'post',
+    url:'/replyComment',
+    data:{
+      text,
+      commentsCommentsId:comsID,
+      tousername:touser,
+      commentid:comID,
+      contentID:this.contentData.id,
+    }
+  }).then((res) => {
+      if (res.data.status === 109) $(el).next().click()
+      for (let i = 0; i < this.commentData.length; i++) {
+        if (this.commentData[i].id === comID - 0) {
+          this.commentData[i].sumComments += 1
+          break
+        } 
+      }
+      res_status(res.data, this)
+  })
+}
+
+function lookUsersTalks(conID, comID, lookUserID, touser){
+  return axios({
+    method:'get',
+    url:`/usersTalk/${conID}/${comID}/${lookUserID}/${touser}`,
+  })
 }
