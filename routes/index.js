@@ -110,10 +110,12 @@ router.get('/content/:contentID', async (req, res, next) => {   //获取文章�
   if (req.user) {
     datas = await Promise.all([db.all('SELECT * FROM comments WHERE contentid=? ORDER BY id ASC', req.params.contentID - 0),
                                db.get('SELECT * FROM contents WHERE id=?', req.params.contentID - 0),
-                               db.get('SELECT browsingHistory FROM users WHERE id=?', req.user.id)]) 
-    datas[2] = `[${req.params.contentID}]` + (datas[2].browsingHistory ? datas[2].browsingHistory : "")
-    db.run('UPDATE users SET browsingHistory = ? WHERE id = ?', datas[2], req.user.id - 0)
-    db.run('UPDATE contents SET browseNumber = browseNumber + 1 WHERE id = ?', req.params.contentID)
+                               db.get('SELECT browsingHistory FROM users WHERE id=?', req.user.id)])
+    if (datas[2].browsingHistory && datas[2].browsingHistory.indexOf(`[${req.params.contentID}]`) === -1) {   
+      datas[2] = `[${req.params.contentID}]` + (datas[2].browsingHistory ? datas[2].browsingHistory : "")
+      db.run('UPDATE users SET browsingHistory = ? WHERE id = ?', datas[2], req.user.id - 0)
+      db.run('UPDATE contents SET browseNumber = browseNumber + 1 WHERE id = ?', req.params.contentID)
+    } 
   } else {
     datas = await Promise.all([db.all('SELECT * FROM comments WHERE contentid=? ORDER BY id ASC', req.params.contentID - 0),
                                db.get('SELECT * FROM contents WHERE id=?', req.params.contentID - 0)])

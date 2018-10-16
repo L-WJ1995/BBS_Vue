@@ -258,7 +258,6 @@ function arrowsClick1() {
     $(".modal-body span").text("未登陆,无法发布内容！")
     $(".modal-footer button").addClass("btn-warning").text("Close")
     modal_status()
-    myBBS.next = "submit_content"
     myBBS.logInShow = true
     return
   } else {
@@ -381,6 +380,7 @@ function subComment() {
     $(".modal-body span").text("未登陆,无法评论！")
     $(".modal-footer button").addClass("btn-warning").text("Close")
     modal_status()
+    hid(this)
     myBBS.logInShow = true
     return
   } 
