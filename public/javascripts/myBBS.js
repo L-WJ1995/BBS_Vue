@@ -218,9 +218,8 @@ function shadeClick() {
   }
 }
 
-function hid(self){
-  if (self) setTimeout(() => {self.hidden=false},600)
-  else setTimeout(() => {this.hidden=false},600)
+function hid(){
+  setTimeout(() => {this.hidden=false},600)
   if (!this.arrowsShow && arrows) {
     arrows.parentNode.classList.add("trans-out")
     setTimeout(() => {
@@ -380,7 +379,7 @@ function subComment() {
     $(".modal-body span").text("未登陆,无法评论！")
     $(".modal-footer button").addClass("btn-warning").text("Close")
     modal_status()
-    hid(this)
+    hid.call(this)
     myBBS.logInShow = true
     return
   } 
