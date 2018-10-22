@@ -448,7 +448,6 @@
       userData:{'username':'','password':'', 'captcha':'', 'keepLogin':false},
       buttonStatus:false,
       commentsComments:{},
-      next:"",
     },
     created() {
       getUser() 
@@ -471,9 +470,7 @@
           res_status(res.data)
           if (res.data.user) {
             this.user = res.data.user
-            if (this.next === "submit_content") arrowsClick()
             res_status(res.data)
-            this.next === ""
           }
         }
         this.buttonStatus = false
